@@ -2,8 +2,11 @@ int pulsePin = 3;
 int capPin = 4;
 const int PULSE_THRESHOLD = 190;
 const int CAP_THRESHOLD = 580;
+// Edit the offset and us_per_cm to calibrate the conversion
+// from microseconds to cm.
 float offset = 0;
 float us_per_cm = 1;
+
 unsigned long pulseTime;
 bool pulseIsHigh = false;
 bool capIsHigh = false;
@@ -33,7 +36,7 @@ void erase_delays_array() {
 int read_level_once() {
   int value = STILL_MEASURING;
   while(value == STILL_MEASURING) {
-    value = one_read_cycle(true);
+    value = one_read_cycle(false);
   }
   return value;
 }
@@ -67,7 +70,12 @@ int one_read_cycle(bool calibrate) {
         for (unsigned int i = 0; i < DELAYS_TO_SAVE; ++i) {
           sum += delays[i];
         }
+        // This is where the final value is computed
         double value = (sum/DELAYS_TO_SAVE - offset)/us_per_cm;
+        // If you want more info printed to the screen, you can add that here
+        // Serial.println(sum);
+
+        // This code is still a work in progress and is not executed yet.
         if(calibrate) {
           Serial.println("------Calibration-------");
           Serial.print("Number of readouts:  ");
