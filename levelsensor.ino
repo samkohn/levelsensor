@@ -7,11 +7,11 @@ const int CAP_THRESHOLD = 580;
 float offset = 0;
 float us_per_cm = 1;
 
-unsigned long pulseTime;
+float pulseTime;
 bool pulseIsHigh = false;
 bool capIsHigh = false;
 const int LEN_DELAYS = 100;
-unsigned long delays[LEN_DELAYS];
+float delays[LEN_DELAYS];
 const int DELAYS_TO_SAVE = 100;
 unsigned int delays_index = 0;
 int current_value = 0;
@@ -42,14 +42,15 @@ int read_level_once() {
 }
 
 void loop() {
-  Serial.println(read_level_once());
+  read_level_once();
+  //Serial.println(read_level_once());
 }
 int one_read_cycle(bool calibrate) {
   if (!pulseIsHigh && !capIsHigh) {
     // Wait for pulse to go high
     int pulseVal = digitalRead(pulsePin);
     if (pulseVal == HIGH) {
-      pulseTime = micros();
+      pulseTime = float(micros());
       pulseIsHigh = true;
     }
     return STILL_MEASURING;
@@ -59,7 +60,7 @@ int one_read_cycle(bool calibrate) {
     int capVal = digitalRead(capPin);
     if (capVal == HIGH) {
       // Save the time delay
-      unsigned long dt = micros() - pulseTime;
+      float dt = float(micros()) - pulseTime;
       capIsHigh = true;
       delays[delays_index] = dt;
       ++delays_index;
@@ -71,9 +72,11 @@ int one_read_cycle(bool calibrate) {
           sum += delays[i];
         }
         // This is where the final value is computed
-        double value = (sum/DELAYS_TO_SAVE - offset)/us_per_cm;
+        float value = (sum/DELAYS_TO_SAVE - offset)/us_per_cm;
         // If you want more info printed to the screen, you can add that here
-        // Serial.println(sum);
+        Serial.print(millis());
+        Serial.print(' ');
+        Serial.println(value);
 
         // This code is still a work in progress and is not executed yet.
         if(calibrate) {
