@@ -16,6 +16,9 @@ const int DELAYS_TO_SAVE = 10;
 unsigned int delays_index = 0;
 int current_value = 0;
 const int STILL_MEASURING = -31415;
+const int NUM_TIMESTAMPS = 100;
+unsigned long timestamps[NUM_TIMESTAMPS];
+unsigned long timestamp_index = 0;
 
 void setup() {
   // put your setup code here, to run once:
@@ -26,7 +29,7 @@ void setup() {
   // Quick and dirty calibration
   
 }
-
+  
 void erase_delays_array() {
   for(int i = 0; i < LEN_DELAYS; ++i) {
     delays[i] = 0;
@@ -45,6 +48,18 @@ void print_delays_array(int n) {
   Serial.print(" ]");
 }
 
+void print_timestamps_array(int n) {
+  Serial.print("[ ");
+  if(n > 0) {
+    Serial.print(timestamps[0]);
+  }
+  for(int i = 1; i < n; ++i) {
+    Serial.print(", ");
+    Serial.print(timestamps[i]);
+  }
+  Serial.print(" ]");
+}
+
 int read_level_once() {
   int value = STILL_MEASURING;
   while(value == STILL_MEASURING) {
@@ -57,7 +72,8 @@ void loop() {
   read_level_once();
   print_delays_array(DELAYS_TO_SAVE);
   Serial.println("");
-  delay(1000);
+  Serial.flush();
+  delay(500);
   //Serial.println(read_level_once());
 }
 int one_read_cycle(bool calibrate) {
@@ -135,3 +151,16 @@ int one_read_cycle(bool calibrate) {
     return STILL_MEASURING;
   }
 }
+
+void track_timestamps() {
+  if(timestamp_index < NUM_TIMESTAMPS) {
+    timestamps[timestamp_index] = micros();
+    ++timestamp_index;
+  }
+  else {
+    print_timestamps_array(NUM_TIMESTAMPS);
+    Serial.println("");
+    timestamp_index = 0;
+  }
+}
+
