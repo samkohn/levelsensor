@@ -12,7 +12,7 @@ bool pulseIsHigh = false;
 bool capIsHigh = false;
 const int LEN_DELAYS = 100;
 float delays[LEN_DELAYS];
-const int DELAYS_TO_SAVE = 10;
+const int DELAYS_TO_SAVE = 100;
 unsigned int delays_index = 0;
 int current_value = 0;
 const int STILL_MEASURING = -31415;
@@ -70,10 +70,10 @@ int read_level_once() {
 
 void loop() {
   read_level_once();
-  print_delays_array(DELAYS_TO_SAVE);
-  Serial.println("");
+  //print_delays_array(DELAYS_TO_SAVE);
+  //Serial.println("");
   Serial.flush();
-  delay(500);
+  //delay(500);
   //Serial.println(read_level_once());
 }
 int one_read_cycle(bool calibrate) {
