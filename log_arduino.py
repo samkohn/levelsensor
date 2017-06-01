@@ -15,13 +15,10 @@ if os.path.isfile(args.output) and not args.force:
     print("Warning: file already exists. Run with -f to overwrite!")
     sys.exit(0)
 fileout = open(args.output,'w')
-while True:
-    # Weird serial read issue (duplicated across software)
-    # causes us to close and reopen serial port once per minute.
-    with serial.Serial(args.port, timeout=0) as s:
-        for i in xrange(60):
-            output = s.readline()
-            if len(output) > 0 and i != 0:
-                fileout.write(str(datetime.datetime.now()) + ' ' + output)
-                print(datetime.datetime.now(), output, end='')
-            time.sleep(1)
+with serial.Serial(args.port, timeout=1) as s:
+    while True:
+        output = s.readline()
+        if len(output) > 0:
+            fileout.write(str(datetime.datetime.now()) + ' ' + output)
+            print(datetime.datetime.now(), output, end='')
+        
