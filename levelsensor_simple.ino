@@ -1,15 +1,21 @@
-int pulsePin = 3;
-int capPin = 4;
+#include <LiquidCrystal.h>
+
+int pulsePin = 12;
+int capPin = 13;
 
 float pulseTime;
 bool pulseIsHigh = false;
 bool capIsHigh = false;
-const int N_SAMPLES = 100;
+const int N_SAMPLES = 500;
 int currentSample = 0;
 float averageTime = 0;
 
+LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+
 void setup() {
   Serial.begin(9600);
+  lcd.begin(16, 2);
+  lcd.print("Starting up...");
   pinMode(pulsePin, INPUT);
   pinMode(capPin, INPUT);
 }
@@ -38,6 +44,15 @@ void read_level_once() {
           // Reset
           currentSample = 0;
           Serial.println(averageTime);
+          lcd.clear();
+          lcd.setCursor(0, 0);
+          lcd.print(averageTime);
+          lcd.print(" ");
+          lcd.print(char(B11100100));
+          lcd.print("s");
+          lcd.setCursor(0, 1);
+          lcd.print(int(averageTime-228));
+          lcd.print(" cm");
           averageTime = 0;
           return;
         }
