@@ -7,7 +7,7 @@ float pulseTime;
 bool pulseIsHigh = false;
 bool capIsHigh = false;
 const int N_SAMPLES = 500;
-const bool EXT_REF = false;
+const bool EXT_REF = true;
 const unsigned int INT_REF_FREQ = 400; // Hz
 int currentSample = 0;
 float averageTime = 0;

@@ -1,3 +1,4 @@
+/*
 int pulsePin = 3;
 int capPin = 4;
 const int PULSE_THRESHOLD = 190;
@@ -164,3 +165,4 @@ void track_timestamps() {
   }
 }
 
+*/
