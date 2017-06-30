@@ -7,6 +7,8 @@ float pulseTime;
 bool pulseIsHigh = false;
 bool capIsHigh = false;
 const int N_SAMPLES = 500;
+const bool EXT_REF = false;
+const unsigned int INT_REF_FREQ = 400; // Hz
 int currentSample = 0;
 float averageTime = 0;
 
@@ -16,7 +18,12 @@ void setup() {
   Serial.begin(9600);
   lcd.begin(16, 2);
   lcd.print("Starting up...");
-  pinMode(pulsePin, INPUT);
+  if( !EXT_REF ) {
+    pinMode(pulsePin, OUTPUT);
+    tone(pulsePin, INT_REF_FREQ);
+  } else {
+    pinMode(pulsePin, INPUT);
+  }
   pinMode(capPin, INPUT);
 }
 
