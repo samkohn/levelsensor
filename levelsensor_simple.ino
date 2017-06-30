@@ -7,8 +7,10 @@ float pulseTime;
 bool pulseIsHigh = false;
 bool capIsHigh = false;
 const int N_SAMPLES = 500;
-const bool EXT_REF = true;
-const unsigned int INT_REF_FREQ = 400; // Hz
+const bool EXT_REF = false;
+const unsigned int INT_REF_FREQ = 200; // Hz
+const float CALIBRATION_SLOPE = 6.1; // us/cm
+const float CALIBRATION_INTERCEPT = 288; // us
 int currentSample = 0;
 float averageTime = 0;
 
@@ -58,7 +60,7 @@ void read_level_once() {
           lcd.print(char(B11100100));
           lcd.print("s");
           lcd.setCursor(0, 1);
-          lcd.print(int(averageTime-228));
+          lcd.print((averageTime - CALIBRATION_INTERCEPT) / CALIBRATION_SLOPE);
           lcd.print(" cm");
           averageTime = 0;
           return;
