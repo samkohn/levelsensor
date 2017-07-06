@@ -8,9 +8,9 @@ bool pulseIsHigh = false;
 bool capIsHigh = false;
 const int N_SAMPLES = 500;
 const bool EXT_REF = false;
-const unsigned int INT_REF_FREQ = 200; // Hz
-const float CALIBRATION_SLOPE = 6.1; // us/cm
-const float CALIBRATION_INTERCEPT = 288; // us
+const unsigned int INT_REF_FREQ = 140; // Hz
+const float CALIBRATION_SLOPE = 2.5; // us/cm
+const float CALIBRATION_INTERCEPT = 321; // us
 int currentSample = 0;
 float averageTime = 0;
 
