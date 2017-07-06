@@ -13,11 +13,22 @@ const float CALIBRATION_SLOPE = 2.5; // us/cm
 const float CALIBRATION_INTERCEPT = 321; // us
 int currentSample = 0;
 float averageTime = 0;
+float averageSquaredTime = 0;
 
 LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
-
+byte customChar[8] = {
+  0b00100,
+  0b00100,
+  0b11111,
+  0b00100,
+  0b00100,
+  0b00000,
+  0b11111,
+  0b00000
+};
 void setup() {
   Serial.begin(9600);
+  lcd.createChar(0, customChar);
   lcd.begin(16, 2);
   lcd.print("Starting up...");
   if( !EXT_REF ) {
@@ -46,23 +57,37 @@ void read_level_once() {
         capIsHigh = true;
         // Add to average
         if (currentSample < N_SAMPLES) {
-          averageTime = averageTime + (micros() - pulseTime) / N_SAMPLES;
+          float currentTime = micros() - pulseTime;
+          averageTime = averageTime + currentTime / N_SAMPLES;
+          averageSquaredTime = averageSquaredTime + currentTime*currentTime / N_SAMPLES;
           currentSample = currentSample + 1;
         }
         if (currentSample == N_SAMPLES) {
           // Reset
           currentSample = 0;
-          Serial.println(averageTime);
+          float measurement = (averageTime - CALIBRATION_INTERCEPT)/CALIBRATION_SLOPE;
+          float error_time = sqrt(averageSquaredTime - averageTime*averageTime);
+          float error_measurement = error_time/CALIBRATION_SLOPE;
+          Serial.print(averageTime);
+          Serial.print(' ');
+          Serial.println(measurement);
           lcd.clear();
           lcd.setCursor(0, 0);
           lcd.print(averageTime);
-          lcd.print(" ");
+          lcd.print(' ');
+          lcd.print((char)0);
+          lcd.print(error_time);
+          lcd.print(' ');
           lcd.print(char(B11100100));
           lcd.print("s");
           lcd.setCursor(0, 1);
-          lcd.print((averageTime - CALIBRATION_INTERCEPT) / CALIBRATION_SLOPE);
+          lcd.print(measurement);
+          lcd.print(' ');
+          lcd.print((char)0);
+          lcd.print(error_measurement);
           lcd.print(" cm");
           averageTime = 0;
+          averageSquaredTime = 0;
           return;
         }
       }
