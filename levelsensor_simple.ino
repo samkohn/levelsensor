@@ -1,4 +1,8 @@
 #include <LiquidCrystal.h>
+#include <EEPROM.h>
+
+// Set this bit to 1 if you want to update the T0 calibration value in memory
+const bool CALIBRATION_MODE = 0;
 
 const int pulsePin = 2;
 const int capPin = 3;
@@ -9,15 +13,20 @@ bool capIsHigh = true;
 const int N_SAMPLES = 500;
 const bool EXT_REF = false;
 const unsigned int INT_REF_FREQ = 140; // Hz
-const float CALIBRATION_SLOPE = 2.5; // us/cm
-const float CALIBRATION_INTERCEPT = 321; // us
+const float CALIBRATION_SLOPE = 5.71; // us/cm
+const int CALIBRATION_INTERCEPT_ADDRESS = 0;
+float calibrationIntercept;
 
 int currentSample = 0;
 unsigned int pulseTime = 0;
 float averageTime = 0;
 float averageSquaredTime = 0;
 
-LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
+LiquidCrystal lcd(8, 9, 10, 11, 12, 13);
+// Wiring:
+//   Pin:  8  9 10 11 12 13  Gn  Gn  5V Pot
+//   LCD: RS En D4 D5 D6 D7 R/W Vss Vcc  V0
+
 const byte plusMinus[8] = {
   0b00100,
   0b00100,
@@ -37,45 +46,44 @@ void reset_all_pins() {
 }
 
 void print_to_lcd(float timeAverage, float timeError, float measurement, float measurementError) {
+  //Updates LCD with inputted values
+
+  // Clear display
   lcd.clear();
 
+  // Print time on first row
   lcd.setCursor(0, 0);
   lcd.print(timeAverage);
   lcd.print(' ');
   lcd.write(byte(0));
+  lcd.print(' ');
   lcd.print(timeError);
   lcd.print(' ');
   lcd.print(char(B11100100));
   lcd.print("s");
 
-  lcd.setCursor(0, 1);
-  lcd.print(measurement);
-  lcd.print(' ');
-  lcd.write(byte(0));
-  lcd.print(measurementError);
-  lcd.print(" cm");
-}
-
-void setup() {
-  reset_all_pins();
-
-  Serial.begin(9600);
-
-  lcd.begin(16, 2);
-  lcd.createChar(0, plusMinus);
-  lcd.print("Starting up...");
-
-  // Set up input/output pins
-  if ( !EXT_REF ) {
-    pinMode(pulsePin, OUTPUT);
-    tone(pulsePin, INT_REF_FREQ);
+  if ( not CALIBRATION_MODE ) {
+    // Print level on second row
+    lcd.setCursor(0, 1);
+    lcd.print(measurement);
+    lcd.print(' ');
+    lcd.write(byte(0));
+    lcd.print(' ');
+    lcd.print(measurementError);
+    lcd.print(" cm");
   } else {
-    pinMode(pulsePin, INPUT);
+    // Warn that you are calibrating
+    lcd.setCursor(0, 1);
+    lcd.print("Calibrating...");
   }
-  pinMode(capPin, INPUT);
 }
 
-void read_level_once() {
+float read_level_once() {
+  // Samples the RC time constant N_SAMPLES times
+  // Sends values to serial port and prints on display
+  // Returns the average value
+
+  // Continuously loop until enough samples are taken
   while (true) {
     if (!pulseIsHigh && !capIsHigh) {
       // Wait for pulse to go high
@@ -84,43 +92,49 @@ void read_level_once() {
         pulseTime = micros();
         pulseIsHigh = true;
       }
-    }
-    if (pulseIsHigh && !capIsHigh) {
+
+    } else if (pulseIsHigh && !capIsHigh) {
       // Wait for cap to go high
       int capVal = digitalRead(capPin);
       if (capVal == HIGH) {
         capIsHigh = true;
-        // Add to average
+
+        // Add RC time to average
         if (currentSample < N_SAMPLES) {
           unsigned int currentTime = micros() - pulseTime;
           averageTime = averageTime + (float)(currentTime) / N_SAMPLES;
           averageSquaredTime = averageSquaredTime + (float)(currentTime) * (float)(currentTime) / N_SAMPLES;
           currentSample++;
         }
+
+        // Enough samples have been taken - report values
         if (currentSample == N_SAMPLES) {
-          // Reset
-          currentSample = 0;
-          float measurement = (averageTime - CALIBRATION_INTERCEPT) / CALIBRATION_SLOPE;
-          float error_time = sqrt(averageSquaredTime - averageTime * averageTime);
+          // Calculate level
+          float measurement = (averageTime - calibrationIntercept) / CALIBRATION_SLOPE;
+          // Calculate error on mean
+          float error_time = sqrt(averageSquaredTime - averageTime * averageTime) / sqrt( N_SAMPLES );
           float error_measurement = error_time / CALIBRATION_SLOPE;
+
+          // Send to serial port
           Serial.print(averageTime);
           Serial.print(' ');
           Serial.println(measurement);
+
+          // Update display
           print_to_lcd(averageTime, error_time, measurement, error_measurement);
-          averageTime = 0;
-          averageSquaredTime = 0;
-          return;
+
+          return averageTime;
         }
       }
-    }
-    if (pulseIsHigh && capIsHigh) {
+
+    } else if (pulseIsHigh && capIsHigh) {
       // Wait for pulse to go low
       int pulseVal = digitalRead(pulsePin);
       if (pulseVal == LOW) {
         pulseIsHigh = false;
       }
-    }
-    if (!pulseIsHigh && capIsHigh) {
+
+    } else if (!pulseIsHigh && capIsHigh) {
       // Wait for cap to go low
       int capVal = digitalRead(capPin);
       if (capVal == LOW) {
@@ -130,9 +144,87 @@ void read_level_once() {
   }
 }
 
-void loop() {
-  read_level_once();
-  Serial.flush();
+void calibrate() {
+  // Takes n measurements of the RC time and stores value in memory
+  int n = 10;
+
+  // Loop for average value
+  float avg = 0;
+  for ( int i = 0; i < n; i++ ) {
+    // Take measurements
+    avg += read_level_once() / n;
+
+    // Reset
+    currentSample = 0;
+    averageTime = 0;
+    averageSquaredTime = 0;
+  }
+
+  // Store in memory
+  EEPROM.put(CALIBRATION_INTERCEPT_ADDRESS, avg);
 }
+
+void setup() {
+  // Set all pins to INPUT_PULLUP
+  reset_all_pins();
+
+  // Set up serial communication
+  Serial.begin(9600);
+
+  // Set up lcd screen
+  lcd.begin(16, 2);
+  lcd.createChar(0, plusMinus);
+  lcd.print("Starting up...");
+
+  // Set up input/output pins
+  if ( !EXT_REF ) {
+    // Use internal reference signal
+    pinMode(pulsePin, OUTPUT);
+    tone(pulsePin, INT_REF_FREQ);
+  } else {
+    // Use external reference signal
+    pinMode(pulsePin, INPUT);
+  }
+  pinMode(capPin, INPUT);
+
+  // Calibrate intercept value
+  if ( CALIBRATION_MODE ) {
+    calibrate();
+    EEPROM.get(CALIBRATION_INTERCEPT_ADDRESS, calibrationIntercept);
+
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Done!");
+    lcd.setCursor(0, 1);
+    lcd.print("T0: ");
+    lcd.print(calibrationIntercept);
+    lcd.print(' ');
+    lcd.print(char(B11100100));
+    lcd.print("s");
+    delay(3000);
+
+    // Read from memory
+  } else {
+    EEPROM.get(CALIBRATION_INTERCEPT_ADDRESS, calibrationIntercept);
+
+  }
+}
+
+
+void loop() {
+  if ( not CALIBRATION_MODE ) {
+    // Measure level
+    read_level_once();
+
+    // Make sure serial port communications are complete
+    Serial.flush();
+
+    // Reset
+    currentSample = 0;
+    averageTime = 0;
+    averageSquaredTime = 0;
+  }
+}
+
 
 
