@@ -1,8 +1,7 @@
 #include <LiquidCrystal.h>
 #include <EEPROM.h>
 
-// Set this bit to 1 if you want to update the T0 calibration value in memory
-const bool CALIBRATION_MODE = 0;
+const bool CALIBRATION_MODE = $CALIBRATION_BIT;
 
 const int pulsePin = 2;
 const int capPin = 3;
@@ -27,7 +26,7 @@ LiquidCrystal lcd(8, 9, 10, 11, 12, 13);
 //   Pin:  8  9 10 11 12 13  Gn  Gn  5V Pot
 //   LCD: RS En D4 D5 D6 D7 R/W Vss Vcc  V0
 
-const byte plusMinus[8] = {
+byte plusMinus[8] = {
   0b00100,
   0b00100,
   0b11111,

@@ -3,3 +3,9 @@
 *.txt
 *~
 #*
+*.d
+*.o
+*.hex
+*.sizeok
+*.a
+*.pyc
