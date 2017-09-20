@@ -118,7 +118,11 @@ float read_level_once() {
           // Send to serial port
           Serial.print(averageTime);
           Serial.print(' ');
-          Serial.println(measurement);
+          Serial.print(error_time);
+          Serial.print(' ');
+          Serial.print(measurement);
+          Serial.print(' ');
+          Serial.println(error_measurement);
 
           // Update display
           print_to_lcd(averageTime, error_time, measurement, error_measurement);
