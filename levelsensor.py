@@ -2,7 +2,9 @@
 Manage the data coming out of the level sensor.
 
 '''
-import time
+import datetime
+import h5py
+import numpy as np
 
 class LevelSensor(object):
     def __init__(self):
@@ -27,7 +29,7 @@ class LevelSensor(object):
         return True
 
     def record(self, serial_readline):
-        timestamp = int(time.time())
+        timestamp = datetime.datetime.now().timestamp()
         self.timestamps.append(timestamp)
         if type(serial_readline) == bytes:
             serial_readline = serial_readline.decode()
@@ -63,3 +65,20 @@ class LevelSensor(object):
 
     def get_last_record_str(self):
         return self.get_record_str(self.size-1)
+
+    def get_records(self):
+        records = np.empty((self.size, 5), dtype=float)
+        records[:,0] = self.timestamps
+        records[:,1] = self.time_reads
+        records[:,2] = self.time_errors
+        records[:,3] = self.position_reads
+        records[:,4] = self.position_errors
+        return records
+
+    def h5write(self, filename):
+        fout = h5py.File(filename, 'w')
+        dset = fout.create_dataset('measurements', data=self.get_records())
+        dset.attrs['description'] = ("column 0: timestamp; 1: time " +
+                "reads [us]; 2: time errors; 3: position[cm]; 4: " +
+                "position error")
+        fout.close()
