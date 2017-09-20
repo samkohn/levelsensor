@@ -2,4 +2,4 @@
 *.xlsx
 *.txt
 *~
-#*
+__pycache__
