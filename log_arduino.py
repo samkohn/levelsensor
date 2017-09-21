@@ -14,10 +14,13 @@ parser.add_argument('--h5-save-interval', default=60, type=int,
         help='num seconds between hdf5 saves')
 args = parser.parse_args()
 h5name = os.path.splitext(args.output)[0] + '.h5'
+csvname = os.path.splittext(args.output)[0] + '.csv'
 if os.path.isfile(args.output) and not args.force:
     print("Warning: file already exists. Run with -f to overwrite!")
     sys.exit(0)
 fileout = open(args.output,'w')
+csvout = open(csvname,'w')
+csvout.write('"timestamp","risetime_us","risetime_err_us","position_cm","position_err_cm"')
 sensor = LevelSensor()
 with serial.Serial(args.port, timeout=1) as s:
     try:
@@ -28,6 +31,7 @@ with serial.Serial(args.port, timeout=1) as s:
                 sensor.record(output)
                 strtoprint = sensor.get_last_record_str()
                 fileout.write(strtoprint)
+                csvout.write(sensor.get_last_record_csv())
                 print(strtoprint, end='')
             if datetime.datetime.now().timestamp() - t0 > args.h5_save_interval:
                 t0 = datetime.datetime.now().timestamp()

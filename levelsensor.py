@@ -63,6 +63,13 @@ class LevelSensor(object):
                 "Level: {0[3]}±{0[4]}").format(record)
         return formatted_string
 
+    def get_record_csv(self, index):
+        record = self.get_record(index)
+        return ','.join(map(str,record))
+
+    def get_last_record_csv(self):
+        return self.get_record_csv(self.size-1)
+
     def get_last_record_str(self):
         return self.get_record_str(self.size-1)
 
