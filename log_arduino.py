@@ -14,7 +14,7 @@ parser.add_argument('--h5-save-interval', default=60, type=int,
         help='num seconds between hdf5 saves')
 args = parser.parse_args()
 h5name = os.path.splitext(args.output)[0] + '.h5'
-csvname = os.path.splittext(args.output)[0] + '.csv'
+csvname = os.path.splitext(args.output)[0] + '.csv'
 if os.path.isfile(args.output) and not args.force:
     print("Warning: file already exists. Run with -f to overwrite!")
     sys.exit(0)
