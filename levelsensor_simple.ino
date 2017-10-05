@@ -107,6 +107,7 @@ float read_level_once() {
           currentSample++;
         }
 
+
         // Enough samples have been taken - report values
         if (currentSample == N_SAMPLES) {
           // Calculate level
@@ -178,7 +179,15 @@ void setup() {
   // Set up lcd screen
   lcd.begin(16, 2);
   lcd.createChar(0, plusMinus);
+  lcd.clear();
+  lcd.setCursor(0, 0);
   lcd.print("Starting up...");
+  lcd.setCursor(0, 1);
+  lcd.print("3..");
+  delay(1000);
+  lcd.print("2..");
+  delay(1000);
+  lcd.print("1..");
 
   // Set up input/output pins
   if ( !EXT_REF ) {
@@ -210,7 +219,6 @@ void setup() {
     // Read from memory
   } else {
     EEPROM.get(CALIBRATION_INTERCEPT_ADDRESS, calibrationIntercept);
-
   }
 }
 
