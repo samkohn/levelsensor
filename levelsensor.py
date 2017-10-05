@@ -3,7 +3,7 @@
 Manage the data coming out of the level sensor.
 
 '''
-import datetime
+import time
 import h5py
 import numpy as np
 
@@ -30,7 +30,7 @@ class LevelSensor(object):
         return True
 
     def record(self, serial_readline):
-        timestamp = datetime.datetime.now().timestamp()
+        timestamp = time.time()
         self.timestamps.append(timestamp)
         if type(serial_readline) == bytes:
             serial_readline = serial_readline.decode()

@@ -1,4 +1,5 @@
 from __future__ import print_function
+import time
 import datetime
 import serial
 import argparse
@@ -24,7 +25,7 @@ csvout.write('"timestamp","risetime_us","risetime_err_us","position_cm","positio
 sensor = LevelSensor()
 with serial.Serial(args.port, timeout=1) as s:
     try:
-        t0 = datetime.datetime.now().timestamp()
+        t0 = time.time()
         while True:
             output = s.readline()
             if len(output) > 0:
@@ -34,8 +35,8 @@ with serial.Serial(args.port, timeout=1) as s:
                 fileout.write(strtoprint)
                 csvout.write(sensor.get_last_record_csv())
                 print(strtoprint, end='')
-            if datetime.datetime.now().timestamp() - t0 > args.h5_save_interval:
-                t0 = datetime.datetime.now().timestamp()
+            if time.time() - t0 > args.h5_save_interval:
+                t0 = time.time()
                 sensor.h5write(h5name)
     except KeyboardInterrupt:
         if sensor.check_integrity():
