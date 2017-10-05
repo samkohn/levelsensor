@@ -1,3 +1,4 @@
+# coding: utf-8
 '''
 Manage the data coming out of the level sensor.
 
