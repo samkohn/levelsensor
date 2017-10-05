@@ -28,7 +28,8 @@ with serial.Serial(args.port, timeout=1) as s:
         while True:
             output = s.readline()
             if len(output) > 0:
-                sensor.record(output)
+                success = sensor.record(output)
+                if not success: continue
                 strtoprint = sensor.get_last_record_str()
                 fileout.write(strtoprint)
                 csvout.write(sensor.get_last_record_csv())

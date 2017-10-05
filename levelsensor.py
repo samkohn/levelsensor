@@ -34,6 +34,9 @@ class LevelSensor(object):
         if type(serial_readline) == bytes:
             serial_readline = serial_readline.decode()
         parsed_output = serial_readline.split(' ')
+        if len(parsed_output) != 4:
+            print(parsed_output)
+            return False
         time_read = parsed_output[0]
         time_error = parsed_output[1]
         position_read = parsed_output[2]
@@ -44,7 +47,7 @@ class LevelSensor(object):
         self.position_errors.append(position_error)
         self.size += 1
         if self.check_integrity():
-            return
+            return True
         else:
             raise ValueError("Data arrays out of sync!")
 
