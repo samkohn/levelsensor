@@ -8,6 +8,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('infile', help='The .h5 or .csv input file to plot')
 parser.add_argument('-i', '--interactive', action='store_true',
         help='interactive plotting')
+parser.add_argument('-o', '--output', default=None, help='output file')
 args = parser.parse_args()
 
 import h5py
@@ -28,7 +29,10 @@ from autodateminorlocator import AutoDateMinorLocator
 
 infilename = args.infile
 basename, extension = os.path.splitext(infilename)
-outfilename = basename + '.pdf'
+if args.output:
+    outfilename = args.output
+else:
+    outfilename = basename + '.pdf'
 if extension == '.h5':
     with h5py.File(infilename, 'r') as infile:
         data = infile['measurements'][:]
