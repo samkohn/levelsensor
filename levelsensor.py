@@ -6,15 +6,18 @@ Manage the data coming out of the level sensor.
 import time
 import h5py
 import numpy as np
+import os
 
 class LevelSensor(object):
-    def __init__(self):
+    def __init__(self, append):
         self.timestamps = []
         self.time_reads = []
         self.time_errors = []
         self.position_reads = []
         self.position_errors = []
         self.size = 0
+        self.last_saved = {}
+        self.append = False
 
     def check_integrity(self):
         if len(self.timestamps) != self.size:
@@ -87,9 +90,28 @@ class LevelSensor(object):
         return records
 
     def h5write(self, filename):
-        fout = h5py.File(filename, 'w')
-        dset = fout.create_dataset('measurements', data=self.get_records())
-        dset.attrs['description'] = ("column 0: timestamp; 1: time " +
-                "reads [us]; 2: time errors; 3: position[cm]; 4: " +
-                "position error")
-        fout.close()
+        past_save = self.last_saved.get(filename, None)
+        if past_save is None and not self.append:
+            with h5py.File(filename, 'w') as fout:
+                dset = fout.create_dataset('measurements',
+                        data=self.get_records(), maxshape=(None, 5))
+                dset.attrs['description'] = ("column 0: timestamp; 1: time " +
+                        "reads [us]; 2: time errors; 3: position[cm]; 4: " +
+                        "position error")
+        elif (past_save is None and self.append) or past_save is not None:
+            if not os.path.isfile(filename):
+                # This file should exist but does not, so raise an error
+                raise FileNotFoundError("Expecting that file %s exists" %
+                        filename)
+            # Figure out which records to append
+            records_to_append = self.get_records()[past_save[1]:]
+            num_records_to_append = records_to_append.shape[0]
+            # then append to the existing file
+            with h5py.File(filename, 'a') as fout:
+                dset = fout['measurements']
+                shape = dset.shape
+                old_length = shape[0]
+                # extend the dataset's shape
+                dset.resize(old_length + num_records_to_append, axis=0)
+                dset[old_length:] = records_to_append
+        self.last_saved[filename] = (self.timestamps[-1], self.size)
