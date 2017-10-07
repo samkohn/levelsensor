@@ -24,6 +24,8 @@ import matplotlib.dates as mpldates
 import os
 import datetime
 
+from autodateminorlocator import AutoDateMinorLocator
+
 infilename = args.infile
 basename, extension = os.path.splitext(infilename)
 outfilename = basename + '.pdf'
@@ -54,6 +56,7 @@ formatter = mpldates.AutoDateFormatter(locator)
 formatter.scaled[1/(24*60.)] = '%H:%M'
 ax1.xaxis.set_major_formatter(formatter)
 ax1.xaxis.set_major_locator(locator)
+ax1.xaxis.set_minor_locator(AutoDateMinorLocator())
 ax2 = ax1.twinx()
 
 xvalues = list(map(datetime.datetime.fromtimestamp, timestamps))
