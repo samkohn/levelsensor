@@ -22,6 +22,7 @@ else:
     matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.dates as mpldates
+import matplotlib.ticker as mplticker
 import os
 import datetime
 
@@ -61,11 +62,14 @@ formatter.scaled[1/(24*60.)] = '%H:%M'
 ax1.xaxis.set_major_formatter(formatter)
 ax1.xaxis.set_major_locator(locator)
 ax1.xaxis.set_minor_locator(AutoDateMinorLocator())
+ax1.yaxis.set_minor_locator(mplticker.AutoMinorLocator())
 ax2 = ax1.twinx()
 
 xvalues = list(map(datetime.datetime.fromtimestamp, timestamps))
 ax2.plot(xvalues, risetimes)
-ax1.plot(xvalues, positions, 'w')
+ax1.plot(xvalues, positions, alpha=0)
+ax1.grid(b=True, which='major', alpha=0.75)
+ax1.grid(b=True, which='minor', alpha=0.25)
 ax1.set_ylabel(r'Liquid level [cm]')
 ax2.set_ylabel(r'$RC$ Rise Time [$\mu$s]')
 ax1.set_xlabel('Clock time')
