@@ -13,7 +13,7 @@ parser.add_argument('--port', help='address of serial port to read')
 parser.add_argument('-f', '--force', action='store_true', help='overwrite existing log file')
 parser.add_argument('--h5-save-interval', default=60, type=int,
         help='num seconds between hdf5 saves')
-parser.add_argumenet('-a', '--append', action='store_true',
+parser.add_argument('-a', '--append', action='store_true',
         help='append to existing log file')
 args = parser.parse_args()
 h5name = os.path.splitext(args.output)[0] + '.h5'
