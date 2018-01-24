@@ -1,0 +1,57 @@
+from __future__ import print_function
+import time
+import datetime
+import serial
+import argparse
+import os.path
+import sys
+from levelsensor import LevelSensor
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-o', '--output', required=True, help='Output log file name')
+parser.add_argument('--port', help='address of serial port to read')
+parser.add_argument('-f', '--force', action='store_true', help='overwrite existing log file')
+parser.add_argument('--h5-save-interval', default=60, type=int,
+        help='num seconds between hdf5 saves')
+parser.add_argument('-a', '--append', action='store_true',
+        help='append to existing log file')
+args = parser.parse_args()
+h5name = os.path.splitext(args.output)[0] + '.h5'
+csvname = os.path.splitext(args.output)[0] + '.csv'
+if os.path.isfile(args.output) and not args.force and not args.append:
+    print("Warning: file already exists. Run with -f to overwrite!")
+    sys.exit(0)
+writemode = 'a' if args.append else 'w'
+fileout = open(args.output,writemode)
+csvout = open(csvname,writemode)
+csvout.write('"timestamp","risetime_us","risetime_err_us","position_cm","position_err_cm"')
+sensor = LevelSensor(args.append)
+with serial.Serial(args.port, timeout=1) as s:
+    try:
+        t0 = time.time()
+        while True:
+            output = s.readline()
+            if len(output) > 0:
+                success = sensor.record(output)
+                if not success: continue
+                strtoprint = sensor.get_last_record_str()
+                fileout.write(strtoprint)
+                csvout.write(sensor.get_last_record_csv())
+                print(strtoprint, end='')
+            if time.time() - t0 > args.h5_save_interval:
+                t0 = time.time()
+                sensor.h5write(h5name)
+    except:
+        if sensor.check_integrity():
+            sensor.h5write(h5name)
+        else:
+            print("Lost data integrity since last save.")
+            print("Last save was at ", datetime.datetime.fromtimestamp(t0))
+            print("Save h5 file even though we've lost data integrity?")
+            answer = str(input("[y/N] "))
+            # assume "no" if answer is N, n, or only whitespace
+            if answer.lower() == 'n' or ''.join(answer.split) == '':
+                pass
+            else:
+                sensor.h5write(h5name)
+        sys.exit(0)

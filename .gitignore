@@ -9,3 +9,6 @@
 *.sizeok
 *.a
 *.pyc
+__pycache__
+output/*
+

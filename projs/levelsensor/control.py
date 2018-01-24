@@ -80,7 +80,7 @@ def calibrate():
 
         # Recompile and upload
         log('Uploading to arduino...')
-        try:
+        try:            
             if not call(['make','upload']) is 0:
                 log('Could not compile or upload.', 'Error')
                 return
