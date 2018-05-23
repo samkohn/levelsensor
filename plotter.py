@@ -52,7 +52,7 @@ else:
 timestamps = data[:,0]
 risetimes = data[:,1]
 risetimes_err = data[:,2]
-positions = (data[:,3] - 84.8)*2
+positions = data[:,3]
 positions_err = data[:,4]
 
 fig, ax1 = plt.subplots()

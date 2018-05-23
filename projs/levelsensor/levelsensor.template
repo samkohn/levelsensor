@@ -12,7 +12,7 @@ bool capIsHigh = true;
 const int N_SAMPLES = 500;
 const bool EXT_REF = false;
 const unsigned int INT_REF_FREQ = 140; // Hz
-const float CALIBRATION_SLOPE = 5.71; // us/cm
+const float CALIBRATION_SLOPE = 3.637; // us/cm
 const int CALIBRATION_INTERCEPT_ADDRESS = 0;
 float calibrationIntercept;
 
