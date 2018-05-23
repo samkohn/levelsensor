@@ -13,19 +13,16 @@ parser.add_argument('--port', help='address of serial port to read')
 parser.add_argument('-f', '--force', action='store_true', help='overwrite existing log file')
 parser.add_argument('--h5-save-interval', default=60, type=int,
         help='num seconds between hdf5 saves')
-parser.add_argument('-a', '--append', action='store_true',
-        help='append to existing log file')
 args = parser.parse_args()
 h5name = os.path.splitext(args.output)[0] + '.h5'
 csvname = os.path.splitext(args.output)[0] + '.csv'
-if os.path.isfile(args.output) and not args.force and not args.append:
+if os.path.isfile(args.output) and not args.force:
     print("Warning: file already exists. Run with -f to overwrite!")
     sys.exit(0)
-writemode = 'a' if args.append else 'w'
-fileout = open(args.output,writemode)
-csvout = open(csvname,writemode)
+fileout = open(args.output,'w')
+csvout = open(csvname,'w')
 csvout.write('"timestamp","risetime_us","risetime_err_us","position_cm","position_err_cm"')
-sensor = LevelSensor(args.append)
+sensor = LevelSensor()
 with serial.Serial(args.port, timeout=1) as s:
     try:
         t0 = time.time()
@@ -41,7 +38,7 @@ with serial.Serial(args.port, timeout=1) as s:
             if time.time() - t0 > args.h5_save_interval:
                 t0 = time.time()
                 sensor.h5write(h5name)
-    except:
+    except KeyboardInterrupt:
         if sensor.check_integrity():
             sensor.h5write(h5name)
         else:
